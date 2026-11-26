@@ -1,0 +1,12 @@
+%% AId-UVO-RT runtime control loop (Mermaid source for docs/02-srie-runtime.md)
+stateDiagram-v2
+    [*] --> Probe
+    Probe --> Discover: capabilities known
+    Discover --> Snapshot: hierarchy + coverage tree
+    Snapshot --> Decide
+    Decide --> Observe: inner policy picked bias + quantum
+    Observe --> Steer: sample values
+    Steer --> Run: force / release
+    Run --> Snapshot: run quantum, collect events, new coverage
+    Snapshot --> Decide: reward + learn
+    Snapshot --> [*]: target reached / budget exhausted

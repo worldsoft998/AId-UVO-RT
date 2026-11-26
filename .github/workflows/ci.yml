@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: non-intrusiveness compliance
+        run: python -m aiduvo lint
+      - name: unit tests
+        run: python -m pytest -q
+      - name: framework selftest (synthetic backend, no simulator)
+        run: python -m aiduvo selftest --outdir runs/_ci --quiet
+      - name: upload selftest report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: selftest-${{ matrix.python-version }}
+          path: runs/_ci
+          if-no-files-found: ignore

@@ -1,0 +1,43 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- AId-UVO-RT runtime artifacts ----
+runs/
+work/
+*.wlf
+*.vcd
+*.ucdb
+transcript
+vsim.wlf
+modelsim.ini
+*.log
+!docs/**/*.log
+
+# ---- Questa / build ----
+*.dll
+*.so
+*.o
+*.obj
+obj/
+lib/
+
+# ---- Report/chart output (regenerate with 04_build_report.bat) ----
+results/**/*.png
+results/**/*.html
+!results/**/report.md
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/

@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aiduvo-rt"
+version = "1.0.0"
+description = "AId-UVO-RT: AI-Driven Universal Verification Optimization (Runtime/Instantaneous) for RTL verification"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "AId-UVO-RT contributors" }]
+keywords = ["verification", "coverage", "reinforcement-learning", "questa", "uvm", "rtl", "vpi", "fli"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+]
+dependencies = ["numpy>=1.22"]
+
+[project.optional-dependencies]
+charts = ["matplotlib>=3.5"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[project.scripts]
+aiduvo = "aiduvo.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["aiduvo*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "slow: end-to-end tests that exercise the full campaign loop",
+  "questa: tests that require a live Siemens QuestaSim installation",
+]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py39"

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Two bin encodings on purpose: a child <ucis:count> element and a hits
+     attribute. The importer must accept both, plus an ignored bin. -->
+<ucis:coveragedata xmlns:ucis="http://www.accellera.org/XMLSchema/UCIS" writtenBy="fixture">
+  <ucis:covergroup name="cg_demo" weight="1">
+    <ucis:coverpoint name="cp_op" weight="1">
+      <ucis:bin name="write"><ucis:count>12</ucis:count></ucis:bin>
+      <ucis:bin name="read"><ucis:count>7</ucis:count></ucis:bin>
+      <ucis:bin name="idle" hits="3"/>
+      <ucis:bin name="never"><ucis:count>0</ucis:count></ucis:bin>
+    </ucis:coverpoint>
+    <ucis:coverpoint name="cp_level" weight="1">
+      <ucis:bin name="lvl0" hits="0"/>
+      <ucis:bin name="lvl1" hits="1"/>
+      <ucis:ignorebin name="lvl2"/>
+    </ucis:coverpoint>
+  </ucis:covergroup>
+</ucis:coveragedata>
