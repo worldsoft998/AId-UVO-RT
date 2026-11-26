@@ -152,6 +152,7 @@ class SimRunner:
             art.error = str(exc)
             art.returncode = -1
         watcher.poll()
+        watcher.flush()  # classify a final line written without a newline
         art.summary = watcher.summary
         art.wall_s = time.time() - t0
         if not art.error and watcher.summary.first_error:

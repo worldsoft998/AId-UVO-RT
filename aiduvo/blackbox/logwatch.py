@@ -76,54 +76,75 @@ class TranscriptWatcher:
 
     def poll(self) -> List[LogEvent]:
         """Return events found since the last call (never blocks)."""
-        new: List[LogEvent] = []
         if not os.path.exists(self.path):
-            return new
+            return []
         try:
             size = os.path.getsize(self.path)
             if size < self.offset:  # file truncated / replaced
                 self.offset = 0
                 self._buffer = ""
             if size == self.offset:
-                return new
+                return []
             with open(self.path, "r", encoding="utf-8", errors="replace") as fh:
                 fh.seek(self.offset)
                 chunk = fh.read()
                 self.offset = fh.tell()
         except OSError:
-            return new
+            return []
+        return self._consume(chunk)
+
+    def flush(self) -> List[LogEvent]:
+        """Classify a trailing line that was written without a newline.
+
+        Simulators routinely end the transcript with `$finish` and no newline,
+        so the last line is held back while tailing and released here.
+        """
+        if not self._buffer:
+            return []
+        text, self._buffer = self._buffer, ""
+        return self._classify(text)
+
+    def _consume(self, chunk: str) -> List[LogEvent]:
+        new: List[LogEvent] = []
         self._buffer += chunk
         *lines, self._buffer = self._buffer.split("\n")
         for raw in lines:
-            line = raw.rstrip("\r")
-            self.summary.lines += 1
-            for kind, rx in self.patterns.items():
-                m = rx.search(line)
-                if not m:
-                    continue
-                value: Optional[float] = None
-                if kind == "time":
-                    value = float(m.group(1)) * _UNIT_NS.get(m.group(2).lower(), 1.0)
-                    self.summary.sim_time_ns = max(self.summary.sim_time_ns, value)
-                elif kind == "coverage":
-                    value = float(m.group(1))
-                    self.summary.coverage_pct = value
-                elif kind == "marker":
-                    try:
-                        self.summary.markers.append(json.loads(m.group(1)))
-                    except json.JSONDecodeError:
-                        pass
-                elif kind == "finish":
-                    self.summary.finished = True
-                if kind in ("error", "fatal") and not self.summary.first_error:
-                    self.summary.first_error = line.strip()
-                self.summary.counts[kind] = self.summary.counts.get(kind, 0) + 1
-                evt = LogEvent(kind=kind, text=line.strip(), line_no=self.summary.lines, value=value)
-                new.append(evt)
-                self.events.append(evt)
-                if len(self.events) > self.max_events:
-                    self.events = self.events[-self.max_events :]
+            new.extend(self._classify(raw))
         return new
+
+    def _classify(self, raw: str) -> List[LogEvent]:
+        line = raw.rstrip("\r")
+        if not line.strip():
+            return []
+        out: List[LogEvent] = []
+        self.summary.lines += 1
+        for kind, rx in self.patterns.items():
+            m = rx.search(line)
+            if not m:
+                continue
+            value: Optional[float] = None
+            if kind == "time":
+                value = float(m.group(1)) * _UNIT_NS.get(m.group(2).lower(), 1.0)
+                self.summary.sim_time_ns = max(self.summary.sim_time_ns, value)
+            elif kind == "coverage":
+                value = float(m.group(1))
+                self.summary.coverage_pct = value
+            elif kind == "marker":
+                try:
+                    self.summary.markers.append(json.loads(m.group(1)))
+                except json.JSONDecodeError:
+                    pass
+            elif kind == "finish":
+                self.summary.finished = True
+            if kind in ("error", "fatal") and not self.summary.first_error:
+                self.summary.first_error = line.strip()
+            self.summary.counts[kind] = self.summary.counts.get(kind, 0) + 1
+            evt = LogEvent(kind=kind, text=line.strip(), line_no=self.summary.lines, value=value)
+            out.append(evt)
+            self.events.append(evt)
+            if len(self.events) > self.max_events:
+                self.events = self.events[-self.max_events :]
+        return out
 
     def should_abort(self, abort_on_error: bool = True, abort_on_assert: bool = False) -> bool:
         if abort_on_error and (self.summary.counts.get("fatal", 0) or self.summary.counts.get("error", 0)):
@@ -137,16 +158,10 @@ class TranscriptWatcher:
 
 
 def scan_text(text: str) -> TranscriptSummary:
-    """One-shot parse of a finished transcript."""
-    watcher = TranscriptWatcher.__new__(TranscriptWatcher)
-    watcher.path = ""
-    watcher.patterns = PATTERNS
-    watcher.offset = 0
-    watcher.summary = TranscriptSummary()
-    watcher.events = []
-    watcher.max_events = 20000
-    watcher._buffer = text
-    watcher.poll()
+    """One-shot parse of a finished transcript (including a final line with no newline)."""
+    watcher = TranscriptWatcher(path="")
+    watcher._consume(text)
+    watcher.flush()
     return watcher.summary
 
 
