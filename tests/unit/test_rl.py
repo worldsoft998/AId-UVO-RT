@@ -75,7 +75,7 @@ def test_mlp_backward_matches_finite_difference():
     x = rng.normal(size=(4, 3))
     target = rng.normal(size=(4, 2))
     out, cache = net.forward(x)
-    dout = 2 * (out - target) / x.shape[0]
+    dout = 2.0 * (out - target) / out.size   # d/d(out) of mean((out-target)^2)
     grads = net.backward(cache, dout)
     for pi, p in enumerate(net.params()):
         idx = tuple(0 for _ in p.shape)

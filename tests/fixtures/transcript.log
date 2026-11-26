@@ -1,0 +1,9 @@
+# vsim -sv_seed 1234 work.tb_top_opt
+# Loading work.tb_top_opt
+# UVM_INFO : running test
+# ** Warning: (vsim-3009) something benign
+# UVM_ERROR : scoreboard mismatch at 1234 ns
+# sim time = 20000 ns
+# Total coverage: 42.50%
+# AIDUVRUN {"seed": 1234, "cycles": 2000}
+# ** Note: $finish

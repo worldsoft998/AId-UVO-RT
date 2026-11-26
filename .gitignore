@@ -21,6 +21,7 @@ vsim.wlf
 modelsim.ini
 *.log
 !docs/**/*.log
+!tests/fixtures/*.log
 
 # ---- Questa / build ----
 *.dll
