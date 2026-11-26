@@ -91,6 +91,21 @@ Windows workflow: `scripts/windows/00_menu.bat` → `01_compile` → `02_run_opt
   that must be reproducible (see `_bias_targets`).
 * **Mock results must stay labelled as illustrative.** `compare()` adds a
   disclaimer when any campaign's backend is `mock`.
+* **`_ensure_loaded()` must not be guarded by `if _REGISTRY: return`.** Importing
+  any learner module registers a class, so a non-empty registry says nothing
+  about whether the control policies (`none`/`random`/`round_robin`) were added.
+  It is guarded by an explicit `_LOADED` flag; without that, every baseline
+  campaign raises `unknown algorithm 'none'`.
+* **`*.log` is git-ignored** (simulator transcripts), so anything under
+  `tests/fixtures/` needs an explicit `!tests/fixtures/*.log` exception or it
+  silently never reaches CI. Audit with: list files on disk minus `git ls-files`.
+* **CI must pin `ubuntu-22.04`.** On the current `ubuntu-latest` (26.04)
+  `actions/setup-python` has no 3.9 build, and the resulting failure cancels the
+  whole matrix under `fail-fast` — the suite appears to run and does not.
+* **Transcript parsing is line-buffered.** `poll()` holds the last partial line
+  back while tailing; call `flush()` at end of run or `$finish` written without
+  a trailing newline is missed. `scan_text()` goes through `_consume`/`_classify`
+  directly because it has no file to `poll()`.
 
 ## Conventions
 
