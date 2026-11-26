@@ -22,6 +22,9 @@ EXCLUDE_SUFFIX = (
     ".pyc", ".pyo", ".wlf", ".ucdb", ".vcd", ".log", ".zip", ".o", ".obj", ".dll", ".so",
 )
 EXCLUDE_NAMES = {"modelsim.ini", "transcript", ".DS_Store", "Thumbs.db", ".coverage"}
+# Test fixtures can look like simulator output (a transcript .log) but are part
+# of the repository, so they survive the suffix filter.
+KEEP_PATHS = (os.path.join("tests", "fixtures") + os.sep,)
 
 
 def iter_files(root: str) -> List[str]:
@@ -31,11 +34,12 @@ def iter_files(root: str) -> List[str]:
         for name in filenames:
             if name in EXCLUDE_NAMES:
                 continue
-            if name.lower().endswith(EXCLUDE_SUFFIX):
+            rel = os.path.relpath(os.path.join(dirpath, name), root)
+            if name.lower().endswith(EXCLUDE_SUFFIX) and not rel.startswith(KEEP_PATHS):
                 continue
             if name.startswith("~$"):
                 continue
-            out.append(os.path.relpath(os.path.join(dirpath, name), root))
+            out.append(rel)
     return sorted(out)
 
 
